@@ -3,11 +3,11 @@
 
 ################### VARIABLES ###################
 
-inputDir="xxxxxxxxxxxxxx"
-outputDir="xxxxxxxxxxxxxx$(date +%F)"
+inputDir="/tank/stuff/clip_todo"
+outputDir="/tank/drive/Clips/$(date +%F)"
 
-telegramChatID=xxxxxxxxxxxxxxx
-telegramBotToken=xxxxxxxxxxxxxxxxx
+telegramChatID=
+telegramBotToken=
 
 
 ################### VARIABLES ###################
@@ -24,7 +24,7 @@ function encodeAV1 {
         -hwaccel qsv -hwaccel_output_format qsv -init_hw_device qsv=hw -filter_hw_device hw -extra_hw_frames 100 \
         -i "/in/$(basename "$input")" \
         -vf hwupload=extra_hw_frames=100,format=qsv \
-        -c:v av1_qsv -preset veryslow -low_power 0 -adaptive_i 1 -adaptive_b 1 -extbrc 1  -global_quality:v 25 -look_ahead_depth 100 \
+        -c:v av1_qsv -preset veryslow -low_power 1 -adaptive_i 1 -adaptive_b 1 -extbrc 1 -global_quality:v 27 -look_ahead_depth 100 \
         -c:a libopus -b:a 128K \
         "/out/$(basename "$input")"
 }
@@ -80,7 +80,7 @@ function sendPhoto {
 
     curl --fail --silent --show-error -X POST \
         "https://api.telegram.org/bot$telegramBotToken/sendPhoto" \
-        -F photo=@"$thumbnail" \
+        -F photo=@"$photo" \
         -F "chat_id=$telegramChatID" \
         -F "caption=$caption"
 }
@@ -118,16 +118,16 @@ function main {
 
         if [ $(du -sb "$mp4out" | cut -f1) -le 52428585 ]
         then
-            sendVideo "$mp4out" "$jpgout" "Link for iOS: https://xxxxxxxxxxx/$(echo "$(dirname "$mp4out" | sed 's,^\(.*/\)\?\([^/]*\),\2,')/$(basename "$mp4out")" | jq '@uri' -jRr )" &
+            sendVideo "$mp4out" "$jpgout" "Link for iOS: https://clips.watn3y.de/$(echo "$(dirname "$mp4out" | sed 's,^\(.*/\)\?\([^/]*\),\2,')/$(basename "$mp4out")" | jq '@uri' -jRr )" &
         else
-            sendPhoto "$jpgout" "This file is fat. Here you go: https://xxxxxxxxxxx/$(echo "$(dirname "$mp4out" | sed 's,^\(.*/\)\?\([^/]*\),\2,')/$(basename "$mp4out")" | jq '@uri' -jRr )" &
+            sendPhoto "$jpgout" "Link for iOS: https://clips.watn3y.de/$(echo "$(dirname "$mp4out" | sed 's,^\(.*/\)\?\([^/]*\),\2,')/$(basename "$mp4out")" | jq '@uri' -jRr )" &
         fi
         #local waitCURL=$!
 
         mv "$filepath" "$outputDir/.high"
 
     done
-    syncRemote "$outputDir" "xxxxxxxxxxx:/mnt/clips/$(basename "$outputDir")" &
+    syncRemote "$outputDir" "balthasar:/mnt/clips/$(basename "$outputDir")" &
     wait
 
     runChmod "$outputDir" "$inputDir"
